@@ -81,31 +81,53 @@ var SoftEngine;
                 this.putPixel(point.x, point.y, new BABYLON.Color4(1, 1, 0, 1));
             }
         };
-
+        Device.prototype.drawLine = function (point0, point1) {
+            var dist = point1.subtract(point0).length();
+        
+            // If the distance between the 2 points is less than 2 pixels
+            // We're exiting
+            if(dist < 2) {
+                return;
+            }
+        
+            // Find the middle point between first & second point
+            var middlePoint = point0.add((point1.subtract(point0)).scale(0.5));
+            // We draw this point on screen
+            this.drawPoint(middlePoint);
+            // Recursive algorithm launched between first & middle point
+            // and between middle & second point
+            this.drawLine(point0, middlePoint);
+            this.drawLine(middlePoint, point1);
+        };
         // The main method of the engine that re-compute each vertex projection
         // during each frame
         Device.prototype.render = function (camera, meshes) {
             // To understand this part, please read the prerequisites resources
             var viewMatrix = BABYLON.Matrix.LookAtLH(camera.Position, camera.Target, BABYLON.Vector3.Up());
-            var projectionMatrix = BABYLON.Matrix.PerspectiveFovLH(0.78,
-                this.workingWidth / this.workingHeight, 0.01, 1.0);
+            var projectionMatrix = BABYLON.Matrix.PerspectiveFovLH(
+                0.78,
+                this.workingWidth / this.workingHeight, 
+                0.01, 
+                1.0
+                );
 
             for (var index = 0; index < meshes.length; index++) {
                 // current mesh to work on
                 var cMesh = meshes[index];
                 // Beware to apply rotation before translation
-                var worldMatrix = BABYLON.Matrix.RotationYawPitchRoll(
+                var worldMatrix = 
+                BABYLON.Matrix.RotationYawPitchRoll(
                     cMesh.Rotation.y, cMesh.Rotation.x, cMesh.Rotation.z)
-                    .multiply(BABYLON.Matrix.Translation(
-                        cMesh.Position.x, cMesh.Position.y, cMesh.Position.z));
+                .multiply(
+                BABYLON.Matrix.Translation(
+                    cMesh.Position.x, cMesh.Position.y, cMesh.Position.z));
 
                 var transformMatrix = worldMatrix.multiply(viewMatrix).multiply(projectionMatrix);
 
-                for (var indexVertices = 0; indexVertices < cMesh.Vertices.length; indexVertices++) {
-                    // First, we project the 3D coordinates into the 2D space
-                    var projectedPoint = this.project(cMesh.Vertices[indexVertices], transformMatrix);
-                    // Then we can draw on screen
-                    this.drawPoint(projectedPoint);
+                for (var i = 0; i < cMesh.Vertices.length -1; i++){
+                    var point0 = this.project(cMesh.Vertices[i], transformMatrix);
+                    var point1 = this.project(cMesh.Vertices[i + 1], transformMatrix);
+                    this.drawLine(point0, point1);
                 }
             }
         };

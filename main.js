@@ -22,7 +22,7 @@ function init() {
     mesh.Vertices[6] = new BABYLON.Vector3(1, -1, 1);
     mesh.Vertices[7] = new BABYLON.Vector3(1, -1, -1);
 
-    camera.Position = new BABYLON.Vector3(0, 0, 30);
+    camera.Position = new BABYLON.Vector3(0, 0, 15);
     camera.Target = new BABYLON.Vector3(0, 0, 0);
 
     // Calling the HTML5 rendering loop
@@ -34,8 +34,8 @@ function drawingLoop() {
     device.clear();
 
     // rotating slightly the cube during each frame rendered
-    mesh.Rotation.x += 0.02;
-    mesh.Rotation.y += 0.02;
+    mesh.Rotation.x += 0.015;
+    mesh.Rotation.y += 0.015;
 
     // Doing the various matrix operations
     device.render(camera, meshes);
