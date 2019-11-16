@@ -9,11 +9,12 @@ var SoftEngine;
     })();
     SoftEngine.Camera = Camera;
     var Mesh = (function () {
-        function Mesh(name, verticesCount) {
+        function Mesh(name, verticesCount, facesCount) {
             this.name = name;
             this.Vertices = new Array(verticesCount);
-            this.Rotation = BABYLON.Vector3.Zero();
-            this.Position = BABYLON.Vector3.Zero();
+            this.Faces = new Array(facesCount);
+            this.Rotation = new BABYLON.Vector3(0, 0, 0);
+            this.Position = new BABYLON.Vector3(0, 0, 0);
         }
         return Mesh;
     })();
@@ -124,10 +125,20 @@ var SoftEngine;
 
                 var transformMatrix = worldMatrix.multiply(viewMatrix).multiply(projectionMatrix);
 
-                for (var i = 0; i < cMesh.Vertices.length -1; i++){
-                    var point0 = this.project(cMesh.Vertices[i], transformMatrix);
-                    var point1 = this.project(cMesh.Vertices[i + 1], transformMatrix);
-                    this.drawLine(point0, point1);
+                for (var indexFaces = 0; indexFaces < cMesh.Faces.length; indexFaces++)
+                {
+                    var currentFace = cMesh.Faces[indexFaces];
+                    var vertexA = cMesh.Vertices[currentFace.A];
+                    var vertexB = cMesh.Vertices[currentFace.B];
+                    var vertexC = cMesh.Vertices[currentFace.C];
+                
+                    var pixelA = this.project(vertexA, transformMatrix);
+                    var pixelB = this.project(vertexB, transformMatrix);
+                    var pixelC = this.project(vertexC, transformMatrix);
+                
+                    this.drawLine(pixelA, pixelB);
+                    this.drawLine(pixelB, pixelC);
+                    this.drawLine(pixelC, pixelA);
                 }
             }
         };
