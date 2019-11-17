@@ -128,7 +128,7 @@ var SoftEngine;
             for (var index = 0; index < meshes.length; index++) {
                 // current mesh to work on
                 var cMesh = meshes[index];
-                // Beware to apply rotation before translation
+                // 先 rotation 再 translation
                 var worldMatrix =
                     BABYLON.Matrix.RotationYawPitchRoll(
                         cMesh.Rotation.y, cMesh.Rotation.x, cMesh.Rotation.z)
