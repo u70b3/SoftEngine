@@ -1,5 +1,6 @@
 var SoftEngine;
 (function (SoftEngine) {
+    // 摄像机类
     var Camera = (function () {
         function Camera() {
             this.Position = BABYLON.Vector3.Zero();
@@ -8,6 +9,7 @@ var SoftEngine;
         return Camera;
     })();
     SoftEngine.Camera = Camera;
+    // Mesh类
     var Mesh = (function () {
         function Mesh(name, verticesCount, facesCount) {
             this.name = name;
@@ -19,84 +21,71 @@ var SoftEngine;
         return Mesh;
     })();
     SoftEngine.Mesh = Mesh;
+    // Device类(Core)
     var Device = (function () {
         function Device(canvas) {
-            // Note: the back buffer size is equal to the number of pixels to draw
-            // on screen (width*height) * 4 (R,G,B & Alpha values). 
+            // Note: 背景 buffer 大小等于在屏幕上要画的像素数
+            // (width*height) * 4 (R,G,B & Alpha values)
             this.workingCanvas = canvas;
             this.workingWidth = canvas.width;
             this.workingHeight = canvas.height;
             this.workingContext = this.workingCanvas.getContext("2d");
         }
-
-        // This function is called to clear the back buffer with a specific color
+        // 使用特定颜色清理背景
         Device.prototype.clear = function () {
-            // Clearing with black color by default
+            // 调用 canvas 的clearRect, 默认清理为 rgba(0,0,0,0)
             this.workingContext.clearRect(0, 0, this.workingWidth, this.workingHeight);
-            // once cleared with black pixels, we're getting back the associated image data to 
-            // clear out back buffer
+            // 清理完之后得到我们的背景 buffer
             this.backbuffer = this.workingContext.getImageData(0, 0, this.workingWidth, this.workingHeight);
         };
-
-        // Once everything is ready, we can flush the back buffer
-        // into the front buffer. 
+        // 一切就绪，把背景 buffer 冲到前景 buffer
         Device.prototype.present = function () {
             this.workingContext.putImageData(this.backbuffer, 0, 0);
         };
-
-        // Called to put a pixel on screen at a specific X,Y coordinates
+        // 在屏幕 (x,y) 处设置一个像素
         Device.prototype.putPixel = function (x, y, color) {
             this.backbufferdata = this.backbuffer.data;
-            // As we have a 1-D Array for our back buffer
-            // we need to know the equivalent cell index in 1-D based
-            // on the 2D coordinates of the screen
+            // 背景 buffer 是一维数组，需要计算 index
+            // Note: 位移运算是为了转 int
             var index = ((x >> 0) + (y >> 0) * this.workingWidth) * 4;
 
-
-
-            // RGBA color space is used by the HTML5 canvas
+            // HTML5 canvas 使用 RGBA 颜色空间
             this.backbufferdata[index] = color.r * 255;
             this.backbufferdata[index + 1] = color.g * 255;
             this.backbufferdata[index + 2] = color.b * 255;
             this.backbufferdata[index + 3] = color.a * 255;
         };
-
-        // Project takes some 3D coordinates and transform them
-        // in 2D coordinates using the transformation matrix
+        // 使用 transformation 矩阵投影和转换 3D 坐标到 2D 
         Device.prototype.project = function (coord, transMat) {
             var point = BABYLON.Vector3.TransformCoordinates(coord, transMat);
-            // The transformed coordinates will be based on coordinate system
-            // starting on the center of the screen. But drawing on screen normally starts
-            // from top left. We then need to transform them again to have x:0, y:0 on top left.
+            // 视口变换: NDC 转 2D坐标 ps: 左上角:(0,0)
             var x = point.x * this.workingWidth + this.workingWidth / 2.0 >> 0;
             var y = -point.y * this.workingHeight + this.workingHeight / 2.0 >> 0;
             return (new BABYLON.Vector2(x, y));
         };
-
-        // drawPoint calls putPixel but does the clipping operation before
+        // drawPoint = clipping -> putPixel
         Device.prototype.drawPoint = function (point) {
-            // Clipping what's visible on screen
-            if (point.x >= 0 && point.y >= 0 && point.x < this.workingWidth
-                && point.y < this.workingHeight) {
-                // Drawing a yellow point
+            // 裁剪出屏幕可见的像素
+            if (point.x >= 0 && point.y >= 0 && point.x < this.workingWidth &&
+                point.y < this.workingHeight) {
+                // 画点 rgba(1,1,0,1)
                 this.putPixel(point.x, point.y, new BABYLON.Color4(1, 1, 0, 1));
             }
         };
+        // 中电画线算法
         Device.prototype.drawLine = function (point0, point1) {
             var dist = point1.subtract(point0).length();
-        
-            // If the distance between the 2 points is less than 2 pixels
-            // We're exiting
-            if(dist < 2) {
+
+            // 两点距离小于 2 像素则返回
+            if (dist < 2) {
                 return;
             }
-        
-            // Find the middle point between first & second point
+
+            // 找中点
             var middlePoint = point0.add((point1.subtract(point0)).scale(0.5));
-            // We draw this point on screen
+            // 画中点
             this.drawPoint(middlePoint);
-            // Recursive algorithm launched between first & middle point
-            // and between middle & second point
+            // 递归
             this.drawLine(point0, middlePoint);
             this.drawLine(middlePoint, point1);
         };
@@ -111,50 +100,54 @@ var SoftEngine;
             var sx = (x0 < x1) ? 1 : -1;
             var sy = (y0 < y1) ? 1 : -1;
             var err = dx - dy;
-            while(true) {
+            while (true) {
                 this.drawPoint(new BABYLON.Vector2(x0, y0));
-                if((x0 == x1) && (y0 == y1)) break;
+                if ((x0 == x1) && (y0 == y1)) break;
                 var e2 = 2 * err;
-                if(e2 > -dy) { err -= dy; x0 += sx; }
-                if(e2 < dx) { err += dx; y0 += sy; }
+                if (e2 > -dy) {
+                    err -= dy;
+                    x0 += sx;
+                }
+                if (e2 < dx) {
+                    err += dx;
+                    y0 += sy;
+                }
             }
         };
-        // The main method of the engine that re-compute each vertex projection
-        // during each frame
+        // 每帧重新计算
         Device.prototype.render = function (camera, meshes) {
-            // To understand this part, please read the prerequisites resources
+            // MVP
             var viewMatrix = BABYLON.Matrix.LookAtLH(camera.Position, camera.Target, BABYLON.Vector3.Up());
             var projectionMatrix = BABYLON.Matrix.PerspectiveFovLH(
                 0.78,
-                this.workingWidth / this.workingHeight, 
-                0.01, 
+                this.workingWidth / this.workingHeight,
+                0.01,
                 1.0
-                );
+            );
 
             for (var index = 0; index < meshes.length; index++) {
                 // current mesh to work on
                 var cMesh = meshes[index];
                 // Beware to apply rotation before translation
-                var worldMatrix = 
-                BABYLON.Matrix.RotationYawPitchRoll(
-                    cMesh.Rotation.y, cMesh.Rotation.x, cMesh.Rotation.z)
-                .multiply(
-                BABYLON.Matrix.Translation(
-                    cMesh.Position.x, cMesh.Position.y, cMesh.Position.z));
+                var worldMatrix =
+                    BABYLON.Matrix.RotationYawPitchRoll(
+                        cMesh.Rotation.y, cMesh.Rotation.x, cMesh.Rotation.z)
+                    .multiply(
+                        BABYLON.Matrix.Translation(
+                            cMesh.Position.x, cMesh.Position.y, cMesh.Position.z));
 
                 var transformMatrix = worldMatrix.multiply(viewMatrix).multiply(projectionMatrix);
 
-                for (var indexFaces = 0; indexFaces < cMesh.Faces.length; indexFaces++)
-                {
+                for (var indexFaces = 0; indexFaces < cMesh.Faces.length; indexFaces++) {
                     var currentFace = cMesh.Faces[indexFaces];
                     var vertexA = cMesh.Vertices[currentFace.A];
                     var vertexB = cMesh.Vertices[currentFace.B];
                     var vertexC = cMesh.Vertices[currentFace.C];
-                
+
                     var pixelA = this.project(vertexA, transformMatrix);
                     var pixelB = this.project(vertexB, transformMatrix);
                     var pixelC = this.project(vertexC, transformMatrix);
-                
+
                     this.drawBline(pixelA, pixelB);
                     this.drawBline(pixelB, pixelC);
                     this.drawBline(pixelC, pixelA);
