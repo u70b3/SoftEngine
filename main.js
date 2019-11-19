@@ -26,8 +26,8 @@ function drawingLoop() {
     device.clear();
     for (var i = 0; i < meshes.length; i++) {
         // 每帧旋转一点，方便观察
-        meshes[i].Rotation.x += 0.01;
-        meshes[i].Rotation.y += 0.01;
+        // meshes[i].Rotation.x += 0.015;
+        meshes[i].Rotation.y += 0.02;
     }
 
     // 做不同的矩阵运算
