@@ -154,8 +154,7 @@ var SoftEngine;
                 }
             }
         };
-        // Loading the JSON file in an asynchronous manner and
-        // calling back with the function passed providing the array of meshes loaded
+        // ajax 封装
         Device.prototype.LoadJSONFileAsync = function (fileName, callback) {
             var jsonObject = {};
             var xmlhttp = new XMLHttpRequest();
@@ -172,15 +171,15 @@ var SoftEngine;
         Device.prototype.CreateMeshesFromJSON = function (jsonObject) {
             var meshes = [];
             for (var meshIndex = 0; meshIndex < jsonObject.meshes.length; meshIndex++) {
+                // 顶点
                 var verticesArray = jsonObject.meshes[meshIndex].vertices;
-                // Faces
+                // 面
                 var indicesArray = jsonObject.meshes[meshIndex].indices;
 
                 var uvCount = jsonObject.meshes[meshIndex].uvCount;
                 var verticesStep = 1;
 
-                // Depending of the number of texture's coordinates per vertex
-                // we're jumping in the vertices array  by 6, 8 & 10 windows frame
+                // 根据每个顶点的纹理坐标数量确定访问顶点数组的 step 
                 switch (uvCount) {
                     case 0:
                         verticesStep = 6;
@@ -193,13 +192,13 @@ var SoftEngine;
                         break;
                 }
 
-                // the number of interesting vertices information for us
+                // 顶点数量(有用信息)
                 var verticesCount = verticesArray.length / verticesStep;
-                // number of faces is logically the size of the array divided by 3 (A, B, C)
+                // 三角形数量 = 数组长度 / 3 (A, B, C)
                 var facesCount = indicesArray.length / 3;
                 var mesh = new SoftEngine.Mesh(jsonObject.meshes[meshIndex].name, verticesCount, facesCount);
 
-                // Filling the Vertices array of our mesh first
+                // 画点
                 for (var index = 0; index < verticesCount; index++) {
                     var x = verticesArray[index * verticesStep];
                     var y = verticesArray[index * verticesStep + 1];
@@ -207,7 +206,7 @@ var SoftEngine;
                     mesh.Vertices[index] = new BABYLON.Vector3(x, y, z);
                 }
 
-                // Then filling the Faces array
+                // 画三角形
                 for (var index = 0; index < facesCount; index++) {
                     var a = indicesArray[index * 3];
                     var b = indicesArray[index * 3 + 1];
@@ -219,7 +218,7 @@ var SoftEngine;
                     };
                 }
 
-                // Getting the position you've set in Blender
+                // 使用模型中的初始位置信息
                 var position = jsonObject.meshes[meshIndex].position;
                 mesh.Position = new BABYLON.Vector3(position[0], position[1], position[2]);
                 meshes.push(mesh);

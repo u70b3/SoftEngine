@@ -12,7 +12,7 @@ function init() {
 
     camera.Position = new BABYLON.Vector3(0, 0, 10);
     camera.Target = new BABYLON.Vector3(0, 0, 0);
-    device.LoadJSONFileAsync("monkey.babylon", LoadJSONCompleted);
+    device.LoadJSONFileAsync("monkey.json", LoadJSONCompleted);
 }
 
 function LoadJSONCompleted(meshsLoaded) {
