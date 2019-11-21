@@ -90,10 +90,8 @@ var SoftEngine;
         };
         //使用 Bresenham 直线生成算法
         Device.prototype.drawBline = function (point0, point1) {
-            var x0 = point0.x >> 0;
-            var y0 = point0.y >> 0;
-            var x1 = point1.x >> 0;
-            var y1 = point1.y >> 0;
+            var x0 = point0.x >> 0, y0 = point0.y >> 0;
+            var x1 = point1.x >> 0, y1 = point1.y >> 0;
             var dx = Math.abs(x1 - x0);
             var dy = Math.abs(y1 - y0);
             var sx = (x0 < x1) ? 1 : -1;
@@ -104,14 +102,8 @@ var SoftEngine;
                 if ((x0 == x1) && (y0 == y1)) break;
                 // 2dx-2dy
                 var e2 = err << 1;
-                if (e2 > -dy) {
-                    err -= dy;
-                    x0 += sx;
-                }
-                if (e2 < dx) {
-                    err += dx;
-                    y0 += sy;
-                }
+                if (e2 > -dy) {err -= dy;x0 += sx;}
+                if (e2 < dx) {err += dx;y0 += sy;}
             }
         };
         Device.prototype.sample = function (point0, point1) {
