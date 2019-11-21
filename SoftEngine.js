@@ -141,7 +141,7 @@ var SoftEngine;
                             cMesh.Position.x, cMesh.Position.y, cMesh.Position.z));
 
                 var transformMatrix = worldMatrix.multiply(viewMatrix).multiply(projectionMatrix);
-
+                // log(`meshs[${index}]:${cMesh.Faces.length} faces`);
                 for (var indexFaces = 0; indexFaces < cMesh.Faces.length; indexFaces++) {
                     var currentFace = cMesh.Faces[indexFaces];
                     var vertexA = cMesh.Vertices[currentFace.A];
@@ -167,14 +167,17 @@ var SoftEngine;
             xmlhttp.onreadystatechange = function () {
                 if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
                     jsonObject = JSON.parse(xmlhttp.responseText);
+                    log('model load success');
                     callback(that.CreateMeshesFromJSON(jsonObject));
                 }
             };
             xmlhttp.send(null);
         };
         Device.prototype.CreateMeshesFromJSON = function (jsonObject) {
+            log(`log from CreateMeshesFromJSON function`);
             var meshes = [];
             for (var meshIndex = 0; meshIndex < jsonObject.meshes.length; meshIndex++) {
+                log(`meshs[${meshIndex}]:`);
                 // 顶点
                 var verticesArray = jsonObject.meshes[meshIndex].vertices;
                 // 面
@@ -198,11 +201,13 @@ var SoftEngine;
 
                 // 顶点数量(有用信息)
                 var verticesCount = verticesArray.length / verticesStep;
+                log(`vertices ${verticesCount}`);
                 // 三角形数量 = 数组长度 / 3 (A, B, C)
                 var facesCount = indicesArray.length / 3;
+                log(`faces ${facesCount}`);
                 var mesh = new SoftEngine.Mesh(jsonObject.meshes[meshIndex].name, verticesCount, facesCount);
 
-                // 画点
+                // 得到点
                 for (var index = 0; index < verticesCount; index++) {
                     var x = verticesArray[index * verticesStep];
                     var y = verticesArray[index * verticesStep + 1];
@@ -210,7 +215,7 @@ var SoftEngine;
                     mesh.Vertices[index] = new BABYLON.Vector3(x, y, z);
                 }
 
-                // 画三角形
+                // 得到三角形
                 for (var index = 0; index < facesCount; index++) {
                     var a = indicesArray[index * 3];
                     var b = indicesArray[index * 3 + 1];
