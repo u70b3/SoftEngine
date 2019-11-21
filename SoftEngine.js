@@ -66,13 +66,15 @@ var SoftEngine;
         // drawPoint = clipping -> putPixel
         Device.prototype.drawPoint = function (point) {
             // 裁剪出屏幕可见的像素
-            if (point.x >= 0 && point.y >= 0 && point.x < this.workingWidth &&
+            if (point.x >= 0 && 
+                point.y >= 0 && 
+                point.x < this.workingWidth &&
                 point.y < this.workingHeight) {
                 // 画点 rgba(1,1,0,1)
                 this.putPixel(point.x, point.y, new BABYLON.Color4(0, 1, 0, 1));
             }
         };
-        // 中电画线算法
+        // 中点画线算法
         Device.prototype.drawLine = function (point0, point1) {
             var dist = point1.subtract(point0).length();
 
