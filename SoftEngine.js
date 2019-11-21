@@ -103,7 +103,7 @@ var SoftEngine;
             while (true) {
                 this.drawPoint(new BABYLON.Vector2(x0, y0));
                 if ((x0 == x1) && (y0 == y1)) break;
-                // 
+                // 2dx-2dy
                 var e2 = err << 1;
                 if (e2 > -dy) {
                     err -= dy;
