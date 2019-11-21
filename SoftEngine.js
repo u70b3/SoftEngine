@@ -77,15 +77,12 @@ var SoftEngine;
         // 中点画线算法
         Device.prototype.drawLine = function (point0, point1) {
             var dist = point1.subtract(point0).length();
-
             // 两点距离小于 2 像素则返回
             if (dist < 2) {
                 return;
             }
-
-            // 找中点
-            var middlePoint = point0.add((point1.subtract(point0)).scale(0.5));
             // 画中点
+            var middlePoint = point0.add((point1.subtract(point0)).scale(0.5));
             this.drawPoint(middlePoint);
             // 递归
             this.drawLine(point0, middlePoint);
