@@ -120,12 +120,16 @@ var SoftEngine;
         // 每帧重新计算
         Device.prototype.render = function (camera, meshes) {
             // MVP
-            var viewMatrix = BABYLON.Matrix.LookAtLH(camera.Position, camera.Target, BABYLON.Vector3.Up());
+            var viewMatrix = BABYLON.Matrix.LookAtLH(
+                camera.Position,    //eye
+                camera.Target,      //target
+                BABYLON.Vector3.Up()//up
+                );
             var projectionMatrix = BABYLON.Matrix.PerspectiveFovLH(
-                0.78,
-                this.workingWidth / this.workingHeight,
-                0.01,
-                1.0
+                0.78,       //fov
+                this.workingWidth / this.workingHeight,//aspect
+                0.01,       //znear
+                1.0         //zfar
             );
 
             for (var index = 0; index < meshes.length; index++) {
@@ -134,10 +138,15 @@ var SoftEngine;
                 // 先 rotation 再 translation
                 var worldMatrix =
                     BABYLON.Matrix.RotationYawPitchRoll(
-                        cMesh.Rotation.y, cMesh.Rotation.x, cMesh.Rotation.z)
+                        cMesh.Rotation.y, 
+                        cMesh.Rotation.x, 
+                        cMesh.Rotation.z)
                     .multiply(
-                        BABYLON.Matrix.Translation(
-                            cMesh.Position.x, cMesh.Position.y, cMesh.Position.z));
+                    BABYLON.Matrix.Translation(
+                        cMesh.Position.x, 
+                        cMesh.Position.y, 
+                        cMesh.Position.z)
+                        );
 
                 var transformMatrix = worldMatrix.multiply(viewMatrix).multiply(projectionMatrix);
                 // log(`meshs[${index}]:${cMesh.Faces.length} faces`);

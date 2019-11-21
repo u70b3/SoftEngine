@@ -407,7 +407,13 @@ var BABYLON;
             var ex = -Vector3.Dot(xAxis, eye);
             var ey = -Vector3.Dot(yAxis, eye);
             var ez = -Vector3.Dot(zAxis, eye);
-            return Matrix.FromValues(xAxis.x, yAxis.x, zAxis.x, 0, xAxis.y, yAxis.y, zAxis.y, 0, xAxis.z, yAxis.z, zAxis.z, 0, ex, ey, ez, 1);
+            return Matrix.FromValues(
+                xAxis.x, yAxis.x, zAxis.x, 
+                0, 
+                xAxis.y, yAxis.y, zAxis.y, 
+                0, 
+                xAxis.z, yAxis.z, zAxis.z, 
+                0, ex, ey, ez, 1);
         };
         Matrix.PerspectiveLH = function PerspectiveLH(width, height, znear, zfar) {
             var matrix = Matrix.Zero();
