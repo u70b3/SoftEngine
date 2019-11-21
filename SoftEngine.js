@@ -115,7 +115,7 @@ var SoftEngine;
                 }
             }
         };
-        Device.prototype.MSAA = function (point0, point1) {
+        Device.prototype.sample = function (point0, point1) {
             //
         }
         // 每帧重新计算
