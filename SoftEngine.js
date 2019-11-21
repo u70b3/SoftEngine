@@ -103,7 +103,8 @@ var SoftEngine;
             while (true) {
                 this.drawPoint(new BABYLON.Vector2(x0, y0));
                 if ((x0 == x1) && (y0 == y1)) break;
-                var e2 = 2 * err;
+                // 
+                var e2 = err << 1;
                 if (e2 > -dy) {
                     err -= dy;
                     x0 += sx;
@@ -114,6 +115,9 @@ var SoftEngine;
                 }
             }
         };
+        Device.prototype.MSAA = function (point0, point1) {
+            //
+        }
         // 每帧重新计算
         Device.prototype.render = function (camera, meshes) {
             // MVP
@@ -132,9 +136,9 @@ var SoftEngine;
                 var worldMatrix =
                     BABYLON.Matrix.RotationYawPitchRoll(
                         cMesh.Rotation.y, cMesh.Rotation.x, cMesh.Rotation.z)
-                        .multiply(
-                            BABYLON.Matrix.Translation(
-                                cMesh.Position.x, cMesh.Position.y, cMesh.Position.z));
+                    .multiply(
+                        BABYLON.Matrix.Translation(
+                            cMesh.Position.x, cMesh.Position.y, cMesh.Position.z));
 
                 var transformMatrix = worldMatrix.multiply(viewMatrix).multiply(projectionMatrix);
 
