@@ -207,7 +207,7 @@ var SoftEngine;
                 log(`faces ${facesCount}`);
                 var mesh = new SoftEngine.Mesh(jsonObject.meshes[meshIndex].name, verticesCount, facesCount);
 
-                // 得到点
+                // get vertices
                 for (var index = 0; index < verticesCount; index++) {
                     var x = verticesArray[index * verticesStep];
                     var y = verticesArray[index * verticesStep + 1];
@@ -215,7 +215,7 @@ var SoftEngine;
                     mesh.Vertices[index] = new BABYLON.Vector3(x, y, z);
                 }
 
-                // 得到三角形
+                // get faces
                 for (var index = 0; index < facesCount; index++) {
                     var a = indicesArray[index * 3];
                     var b = indicesArray[index * 3 + 1];
