@@ -64,14 +64,14 @@ var SoftEngine;
             return (new BABYLON.Vector2(x, y));
         };
         // drawPoint = clipping -> putPixel
-        Device.prototype.drawPoint = function (point) {
+        Device.prototype.drawPoint = function (point, color) {
             // 裁剪出屏幕可见的像素
             if (point.x >= 0 && 
                 point.y >= 0 && 
                 point.x < this.workingWidth &&
                 point.y < this.workingHeight) {
                 // 画点 rgba(1,1,0,1)
-                this.putPixel(point.x, point.y, new BABYLON.Color4(0, 1, 0, 1));
+                this.putPixel(point.x, point.y, color);
             }
         };
         // 中点画线算法
@@ -83,7 +83,7 @@ var SoftEngine;
             }
             // 画中点
             var middlePoint = point0.add((point1.subtract(point0)).scale(0.5));
-            this.drawPoint(middlePoint);
+            this.drawPoint(middlePoint, new BABYLON.Color4(0, 1, 0, 1));
             // 递归
             this.drawLine(point0, middlePoint);
             this.drawLine(middlePoint, point1);
@@ -98,7 +98,7 @@ var SoftEngine;
             var sy = (y0 < y1) ? 1 : -1;
             var err = dx - dy;
             while (true) {
-                this.drawPoint(new BABYLON.Vector2(x0, y0));
+                this.drawPoint(new BABYLON.Vector2(x0, y0), new BABYLON.Color4(0, 1, 0, 1));
                 if ((x0 == x1) && (y0 == y1)) break;
                 // 2dx-2dy
                 var e2 = err << 1;
