@@ -199,14 +199,16 @@ var SoftEngine;
                         break;
                 }
 
-                // 顶点数量(有用信息)
                 var verticesCount = verticesArray.length / verticesStep;
                 log(`vertices ${verticesCount}`);
                 // 三角形数量 = 数组长度 / 3 (A, B, C)
                 var facesCount = indicesArray.length / 3;
                 log(`faces ${facesCount}`);
-                var mesh = new SoftEngine.Mesh(jsonObject.meshes[meshIndex].name, verticesCount, facesCount);
-
+                var mesh = new SoftEngine.Mesh(
+                    jsonObject.meshes[meshIndex].name, 
+                    verticesCount, 
+                    facesCount
+                    );
                 // get vertices
                 for (var index = 0; index < verticesCount; index++) {
                     var x = verticesArray[index * verticesStep];
@@ -214,7 +216,6 @@ var SoftEngine;
                     var z = verticesArray[index * verticesStep + 2];
                     mesh.Vertices[index] = new BABYLON.Vector3(x, y, z);
                 }
-
                 // get faces
                 for (var index = 0; index < facesCount; index++) {
                     var a = indicesArray[index * 3];
