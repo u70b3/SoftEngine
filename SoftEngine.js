@@ -30,6 +30,7 @@ var SoftEngine;
             this.workingWidth = canvas.width;
             this.workingHeight = canvas.height;
             this.workingContext = this.workingCanvas.getContext("2d");
+            this.depthbuffer = new Array(this.workingWidth * this.workingHeight);
         }
         // 使用特定颜色清理背景
         Device.prototype.clear = function () {
@@ -37,23 +38,34 @@ var SoftEngine;
             this.workingContext.clearRect(0, 0, this.workingWidth, this.workingHeight);
             // 清理完之后得到我们的背景 buffer
             this.backbuffer = this.workingContext.getImageData(0, 0, this.workingWidth, this.workingHeight);
+            // Clearing depth buffer
+            for (var i = 0; i < this.depthbuffer.length; i++) {
+                // Max possible value 
+                this.depthbuffer[i] = 1e10;
+            }
         };
         // 一切就绪，把背景 buffer 冲到前景 buffer
         Device.prototype.present = function () {
             this.workingContext.putImageData(this.backbuffer, 0, 0);
         };
         // 在屏幕 (x,y) 处设置一个像素
-        Device.prototype.putPixel = function (x, y, color) {
+        Device.prototype.putPixel = function (x, y, z, color) {
             this.backbufferdata = this.backbuffer.data;
             // 背景 buffer 是一维数组，需要计算 index
             // Note: 位移运算是为了转 int
-            var index = ((x >> 0) + (y >> 0) * this.workingWidth) * 4;
+            var index = (x >> 0) + (y >> 0) * this.workingWidth;
+            var index4 = index * 4;
 
+            if (this.depthbuffer[index] < z) {
+                return; // 丢弃
+            }
+
+            this.depthbuffer[index] = z;
             // HTML5 canvas 使用 RGBA 颜色空间
-            this.backbufferdata[index] = color.r * 255;
-            this.backbufferdata[index + 1] = color.g * 255;
-            this.backbufferdata[index + 2] = color.b * 255;
-            this.backbufferdata[index + 3] = color.a * 255;
+            this.backbufferdata[index4] = color.r * 255;
+            this.backbufferdata[index4 + 1] = color.g * 255;
+            this.backbufferdata[index4 + 2] = color.b * 255;
+            this.backbufferdata[index4 + 3] = color.a * 255;
         };
         // 使用 transformation 矩阵投影和转换 3D 坐标到 2D 
         Device.prototype.project = function (coord, transMat) {
@@ -61,7 +73,7 @@ var SoftEngine;
             // 视口变换: NDC 转 2D坐标 ps: 左上角:(0,0)
             var x = point.x * this.workingWidth + this.workingWidth / 2.0 >> 0;
             var y = -point.y * this.workingHeight + this.workingHeight / 2.0 >> 0;
-            return (new BABYLON.Vector2(x, y));
+            return (new BABYLON.Vector3(x, y, point.z));
         };
         // drawPoint = clipping -> putPixel
         Device.prototype.drawPoint = function (point, color) {
@@ -70,8 +82,7 @@ var SoftEngine;
                 point.y >= 0 &&
                 point.x < this.workingWidth &&
                 point.y < this.workingHeight) {
-                // 画点 rgba(1,1,0,1)
-                this.putPixel(point.x, point.y, color);
+                this.putPixel(point.x, point.y, point.z, color);
             }
         };
         // 中点画线算法
@@ -143,9 +154,15 @@ var SoftEngine;
             var sx = this.interpolate(pa.x, pb.x, gradient1) >> 0;
             var ex = this.interpolate(pc.x, pd.x, gradient2) >> 0;
 
+            // starting Z & ending Z
+            var z1 = this.interpolate(pa.z, pb.z, gradient1);
+            var z2 = this.interpolate(pc.z, pd.z, gradient2);
+
             // sx -> ex 画线
             for (var x = sx; x < ex; x++) {
-                this.drawPoint(new BABYLON.Vector2(x, y), color);
+                var gradient = (x - sx) / (ex - sx);
+                var z = this.interpolate(z1, z2, gradient);
+                this.drawPoint(new BABYLON.Vector3(x, y, z), color);
             }
         };
 
@@ -247,12 +264,12 @@ var SoftEngine;
                         cMesh.Rotation.y,
                         cMesh.Rotation.x,
                         cMesh.Rotation.z)
-                    .multiply(
-                        BABYLON.Matrix.Translation(
-                            cMesh.Position.x,
-                            cMesh.Position.y,
-                            cMesh.Position.z)
-                    );
+                        .multiply(
+                            BABYLON.Matrix.Translation(
+                                cMesh.Position.x,
+                                cMesh.Position.y,
+                                cMesh.Position.z)
+                        );
 
                 var transformMatrix = worldMatrix.multiply(viewMatrix).multiply(projectionMatrix);
                 // log(`meshs[${index}]:${cMesh.Faces.length} faces`);
@@ -266,9 +283,9 @@ var SoftEngine;
                     var pixelB = this.project(vertexB, transformMatrix);
                     var pixelC = this.project(vertexC, transformMatrix);
 
-                    var r = 0.3 + ((indexFaces % cMesh.Faces.length) / cMesh.Faces.length)*0.6;
-                    var g = 0.3 + ((indexFaces % cMesh.Faces.length) / cMesh.Faces.length)*0.6;
-                    var b = 0.3 + ((indexFaces % cMesh.Faces.length) / cMesh.Faces.length)*0.6;
+                    var r = 0.3 + ((indexFaces % cMesh.Faces.length) / cMesh.Faces.length) * 0.7;
+                    var g = 0.3 + ((indexFaces % cMesh.Faces.length) / cMesh.Faces.length) * 0.7;
+                    var b = 0.3 + ((indexFaces % cMesh.Faces.length) / cMesh.Faces.length) * 0.7;
                     this.drawTriangle(pixelA, pixelB, pixelC, new BABYLON.Color4(r, g, b, 1));
                 }
             }
