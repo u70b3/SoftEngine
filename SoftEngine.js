@@ -66,8 +66,8 @@ var SoftEngine;
         // drawPoint = clipping -> putPixel
         Device.prototype.drawPoint = function (point, color) {
             // 裁剪出屏幕可见的像素
-            if (point.x >= 0 && 
-                point.y >= 0 && 
+            if (point.x >= 0 &&
+                point.y >= 0 &&
                 point.x < this.workingWidth &&
                 point.y < this.workingHeight) {
                 // 画点 rgba(1,1,0,1)
@@ -102,13 +102,114 @@ var SoftEngine;
                 if ((x0 == x1) && (y0 == y1)) break;
                 // 2dx-2dy
                 var e2 = err << 1;
-                if (e2 > -dy) {err -= dy;x0 += sx;}
-                if (e2 < dx) {err += dx;y0 += sy;}
+                if (e2 > -dy) { err -= dy; x0 += sx; }
+                if (e2 < dx) { err += dx; y0 += sy; }
             }
         };
         Device.prototype.sample = function (point0, point1) {
             //
         }
+        // 裁剪保证 0-1 的值
+        Device.prototype.clamp = function (value, min, max) {
+            if (typeof min === "undefined") { min = 0; }
+            if (typeof max === "undefined") { max = 1; }
+            return Math.max(min, Math.min(value, max));
+        };
+        // 两点之间插值, min->max 起始点到终点
+        Device.prototype.interpolate = function (min, max, gradient) {
+            return min + (max - min) * this.clamp(gradient);
+        };
+
+        // 两点从左到右画线
+        // papb -> pcpd
+        // pa, pb, pc, pd 必须排好序
+        Device.prototype.processScanLine = function (y, pa, pb, pc, pd, color) {
+            // 根据当前 y 值计算sx ex, 竖直线 gradient 处理为1
+            var gradient1 = pa.y != pb.y ? (y - pa.y) / (pb.y - pa.y) : 1;
+            var gradient2 = pc.y != pd.y ? (y - pc.y) / (pd.y - pc.y) : 1;
+
+            var sx = this.interpolate(pa.x, pb.x, gradient1) >> 0;
+            var ex = this.interpolate(pc.x, pd.x, gradient2) >> 0;
+
+            // sx -> ex 画线
+            for (var x = sx; x < ex; x++) {
+                this.drawPoint(new BABYLON.Vector2(x, y), color);
+            }
+        };
+
+        Device.prototype.drawTriangle = function (p1, p2, p3, color) {
+            // 排序之后是 p1 p2 p3
+            if (p1.y > p2.y) {
+                var temp = p2;
+                p2 = p1;
+                p1 = temp;
+            }
+            if (p2.y > p3.y) {
+                var temp = p2;
+                p2 = p3;
+                p3 = temp;
+            }
+            if (p1.y > p2.y) {
+                var temp = p2;
+                p2 = p1;
+                p1 = temp;
+            }
+
+            // 计算 1/k 根据斜率判断是哪种情况
+            var dP1P2; var dP1P3;
+
+            if (p2.y - p1.y > 0) {
+                dP1P2 = (p2.x - p1.x) / (p2.y - p1.y);
+            } else {
+                dP1P2 = 0;
+            }
+
+            if (p3.y - p1.y > 0) {
+                dP1P3 = (p3.x - p1.x) / (p3.y - p1.y);
+            } else {
+                dP1P3 = 0;
+            }
+            // 第一种情况: 
+            // P1
+            // -
+            // -- 
+            // - -
+            // -  -
+            // -   - P2
+            // -  -
+            // - -
+            // -
+            // P3
+            if (dP1P2 > dP1P3) {
+                for (var y = p1.y >> 0; y <= p3.y >> 0; y++) {
+                    if (y < p2.y) {
+                        this.processScanLine(y, p1, p3, p1, p2, color);
+                    } else {
+                        this.processScanLine(y, p1, p3, p2, p3, color);
+                    }
+                }
+            }
+            // 第二种情况
+            //       P1
+            //        -
+            //       -- 
+            //      - -
+            //     -  -
+            // P2 -   - 
+            //     -  -
+            //      - -
+            //        -
+            //       P3
+            else {
+                for (var y = p1.y >> 0; y <= p3.y >> 0; y++) {
+                    if (y < p2.y) {
+                        this.processScanLine(y, p1, p2, p1, p3, color);
+                    } else {
+                        this.processScanLine(y, p2, p3, p1, p3, color);
+                    }
+                }
+            }
+        };
         // 每帧重新计算
         Device.prototype.render = function (camera, meshes) {
             // MVP
@@ -116,7 +217,7 @@ var SoftEngine;
                 camera.Position,    //eye
                 camera.Target,      //target
                 BABYLON.Vector3.Up()//up
-                );
+            );
             var projectionMatrix = BABYLON.Matrix.PerspectiveFovLH(
                 0.78,       //fov
                 this.workingWidth / this.workingHeight,//aspect
@@ -130,14 +231,14 @@ var SoftEngine;
                 // 先 rotation 再 translation
                 var worldMatrix =
                     BABYLON.Matrix.RotationYawPitchRoll(
-                        cMesh.Rotation.y, 
-                        cMesh.Rotation.x, 
+                        cMesh.Rotation.y,
+                        cMesh.Rotation.x,
                         cMesh.Rotation.z)
-                    .multiply(
-                    BABYLON.Matrix.Translation(
-                        cMesh.Position.x, 
-                        cMesh.Position.y, 
-                        cMesh.Position.z)
+                        .multiply(
+                            BABYLON.Matrix.Translation(
+                                cMesh.Position.x,
+                                cMesh.Position.y,
+                                cMesh.Position.z)
                         );
 
                 var transformMatrix = worldMatrix.multiply(viewMatrix).multiply(projectionMatrix);
@@ -152,9 +253,8 @@ var SoftEngine;
                     var pixelB = this.project(vertexB, transformMatrix);
                     var pixelC = this.project(vertexC, transformMatrix);
 
-                    this.drawBline(pixelA, pixelB);
-                    this.drawBline(pixelB, pixelC);
-                    this.drawBline(pixelC, pixelA);
+                    var color = ((indexFaces % cMesh.Faces.length) / cMesh.Faces.length) ;
+                    this.drawTriangle(pixelA, pixelB, pixelC, new BABYLON.Color4(color, color, color, 1));
                 }
             }
         };
@@ -205,10 +305,10 @@ var SoftEngine;
                 var facesCount = indicesArray.length / 3;
                 log(`faces ${facesCount}`);
                 var mesh = new SoftEngine.Mesh(
-                    jsonObject.meshes[meshIndex].name, 
-                    verticesCount, 
+                    jsonObject.meshes[meshIndex].name,
+                    verticesCount,
                     facesCount
-                    );
+                );
                 // get vertices
                 for (var index = 0; index < verticesCount; index++) {
                     var x = verticesArray[index * verticesStep];
