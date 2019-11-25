@@ -90,8 +90,10 @@ var SoftEngine;
         };
         //使用 Bresenham 直线生成算法
         Device.prototype.drawBline = function (point0, point1) {
-            var x0 = point0.x >> 0, y0 = point0.y >> 0;
-            var x1 = point1.x >> 0, y1 = point1.y >> 0;
+            var x0 = point0.x >> 0,
+                y0 = point0.y >> 0;
+            var x1 = point1.x >> 0,
+                y1 = point1.y >> 0;
             var dx = Math.abs(x1 - x0);
             var dy = Math.abs(y1 - y0);
             var sx = (x0 < x1) ? 1 : -1;
@@ -102,8 +104,14 @@ var SoftEngine;
                 if ((x0 == x1) && (y0 == y1)) break;
                 // 2dx-2dy
                 var e2 = err << 1;
-                if (e2 > -dy) { err -= dy; x0 += sx; }
-                if (e2 < dx) { err += dx; y0 += sy; }
+                if (e2 > -dy) {
+                    err -= dy;
+                    x0 += sx;
+                }
+                if (e2 < dx) {
+                    err += dx;
+                    y0 += sy;
+                }
             }
         };
         Device.prototype.sample = function (point0, point1) {
@@ -111,8 +119,12 @@ var SoftEngine;
         }
         // 裁剪保证 0-1 的值
         Device.prototype.clamp = function (value, min, max) {
-            if (typeof min === "undefined") { min = 0; }
-            if (typeof max === "undefined") { max = 1; }
+            if (typeof min === "undefined") {
+                min = 0;
+            }
+            if (typeof max === "undefined") {
+                max = 1;
+            }
             return Math.max(min, Math.min(value, max));
         };
         // 两点之间插值, min->max 起始点到终点
@@ -156,7 +168,8 @@ var SoftEngine;
             }
 
             // 计算 1/k 根据斜率判断是哪种情况
-            var dP1P2; var dP1P3;
+            var dP1P2;
+            var dP1P3;
 
             if (p2.y - p1.y > 0) {
                 dP1P2 = (p2.x - p1.x) / (p2.y - p1.y);
@@ -214,15 +227,15 @@ var SoftEngine;
         Device.prototype.render = function (camera, meshes) {
             // MVP
             var viewMatrix = BABYLON.Matrix.LookAtLH(
-                camera.Position,    //eye
-                camera.Target,      //target
-                BABYLON.Vector3.Up()//up
+                camera.Position, //eye
+                camera.Target, //target
+                BABYLON.Vector3.Up() //up
             );
             var projectionMatrix = BABYLON.Matrix.PerspectiveFovLH(
-                0.78,       //fov
-                this.workingWidth / this.workingHeight,//aspect
-                0.01,       //znear
-                1.0         //zfar
+                0.78, //fov
+                this.workingWidth / this.workingHeight, //aspect
+                0.01, //znear
+                1.0 //zfar
             );
 
             for (var index = 0; index < meshes.length; index++) {
@@ -234,12 +247,12 @@ var SoftEngine;
                         cMesh.Rotation.y,
                         cMesh.Rotation.x,
                         cMesh.Rotation.z)
-                        .multiply(
-                            BABYLON.Matrix.Translation(
-                                cMesh.Position.x,
-                                cMesh.Position.y,
-                                cMesh.Position.z)
-                        );
+                    .multiply(
+                        BABYLON.Matrix.Translation(
+                            cMesh.Position.x,
+                            cMesh.Position.y,
+                            cMesh.Position.z)
+                    );
 
                 var transformMatrix = worldMatrix.multiply(viewMatrix).multiply(projectionMatrix);
                 // log(`meshs[${index}]:${cMesh.Faces.length} faces`);
@@ -253,8 +266,10 @@ var SoftEngine;
                     var pixelB = this.project(vertexB, transformMatrix);
                     var pixelC = this.project(vertexC, transformMatrix);
 
-                    var color = ((indexFaces % cMesh.Faces.length) / cMesh.Faces.length) ;
-                    this.drawTriangle(pixelA, pixelB, pixelC, new BABYLON.Color4(color, color, color, 1));
+                    var r = 0.3 + ((indexFaces % cMesh.Faces.length) / cMesh.Faces.length)*0.6;
+                    var g = 0.3 + ((indexFaces % cMesh.Faces.length) / cMesh.Faces.length)*0.6;
+                    var b = 0.3 + ((indexFaces % cMesh.Faces.length) / cMesh.Faces.length)*0.6;
+                    this.drawTriangle(pixelA, pixelB, pixelC, new BABYLON.Color4(r, g, b, 1));
                 }
             }
         };
