@@ -71,8 +71,8 @@ var SoftEngine;
         Device.prototype.project = function (coord, transMat) {
             var point = BABYLON.Vector3.TransformCoordinates(coord, transMat);
             // 视口变换: NDC 转 2D坐标 ps: 左上角:(0,0)
-            var x = point.x * this.workingWidth + this.workingWidth / 2.0 >> 0;
-            var y = -point.y * this.workingHeight + this.workingHeight / 2.0 >> 0;
+            var x = point.x * this.workingWidth + this.workingWidth / 2.0 ;
+            var y = -point.y * this.workingHeight + this.workingHeight / 2.0 ;
             return (new BABYLON.Vector3(x, y, point.z));
         };
         // drawPoint = clipping -> putPixel
